@@ -1,13 +1,17 @@
-<!DOCTYPE html>
+
+
+  <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة العقارات</title>
 <style>
 body{direction:rtl;font-family:Arial}
 .card{border:1px solid #ccc;margin:10px;padding:10px}
 img{width:80px;height:80px;object-fit:cover}
 input,textarea{width:90%;margin:5px}
+button{margin:4px}
 </style>
 </head>
 <body>
@@ -36,109 +40,141 @@ input,textarea{width:90%;margin:5px}
 <div id="list"></div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbyYoK3gl1Vgoekc_8PD-4jwvI0ng1Pi740uXggMAxU98m59mZQBYpmIqX_eyclq-tOpMg/exec";
-const CLOUD="dxjzks7xl";
-const PRESET="myupload";
+const API = "https://script.google.com/macros/s/AKfycbw7ELaoX-FfaumXWzdP2a92YC2g5XdY-aO2UE5FdHHUbxWY8QrwZNWzaotcQO1-8rtnPA/exec";
+const CLOUD = "dxjzks7xl";
+const PRESET = "myupload";
+
+const $ = (id) => document.getElementById(id);
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 // رفع ملف (Cloudinary)
-async function upload(file,type="image"){
-  let fd=new FormData();
-  fd.append("file",file);
-  fd.append("upload_preset",PRESET);
+async function upload(file, type = "image") {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", PRESET);
 
-  let r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${type}/upload`,{
-    method:"POST",
-    body:fd
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${type}/upload`, {
+    method: "POST",
+    body: fd
   });
 
-  let d=await r.json();
+  if (!r.ok) {
+    throw new Error("Cloudinary upload failed");
+  }
+
+  const d = await r.json();
   return d.secure_url;
 }
 
-async function uploadImages(files){
-  let arr=[];
-  for(let f of files) arr.push(await upload(f,"image"));
+async function uploadImages(files) {
+  const arr = [];
+  for (const f of files) arr.push(await upload(f, "image"));
   return arr.join("|");
 }
 
-async function uploadVideo(file){
-  return await upload(file,"video");
+async function uploadVideo(file) {
+  return await upload(file, "video");
 }
 
-async function save(){
-  let id=id.value;
+async function save() {
+  const itemId = $("id").value;
 
-  let imgFiles=images.files;
-  let vidFile=video.files[0];
+  const imgFiles = $("images").files;
+  const vidFile = $("video").files[0];
 
-  let img = imgFiles.length ? await uploadImages(imgFiles) : null;
-  let vid = vidFile ? await uploadVideo(vidFile) : null;
+  const img = imgFiles.length ? await uploadImages(imgFiles) : "";
+  const vid = vidFile ? await uploadVideo(vidFile) : "";
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action: id?"edit":"add",
-      id,
-      title:title.value,
-      price:price.value,
-      location:location.value,
-      description:description.value,
-      images:img,
-      video:vid,
-      status:"published"
+  await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: itemId ? "edit" : "add",
+      id: itemId,
+      title: $("title").value,
+      price: $("price").value,
+      location: $("location").value,
+      description: $("description").value,
+      images: img,
+      video: vid,
+      status: "published"
     })
   });
 
+  $("id").value = "";
+  $("images").value = "";
+  $("video").value = "";
   load();
 }
 
-async function load(){
-  let res=await fetch(API+"?action=my");
-  let data=await res.json();
+async function load() {
+  const res = await fetch(API + "?action=my&_=" + Date.now());
+  const data = await res.json();
 
-  let q=search.value?.toLowerCase()||"";
+  const q = ($("search").value || "").toLowerCase();
 
-  let html="";
-  data.filter(i=>i.title.toLowerCase().includes(q)).forEach(i=>{
-    html+=`
+  let html = "";
+  data.filter(i => String(i.title || "").toLowerCase().includes(q)).forEach(i => {
+    html += `
     <div class="card">
-      <b>${i.title}</b><br>
-      ${i.price}<br>
-      ${i.location}<br>
+      <b>${escapeHtml(i.title)}</b><br>
+      ${escapeHtml(i.price)}<br>
+      ${escapeHtml(i.location)}<br>
 
-      <button onclick="editItem('${i.id}','${i.title}','${i.price}','${i.location}','${i.description}')">تعديل</button>
-      <button onclick="del('${i.id}')">حذف</button>
-      <button onclick="status('${i.id}','published')">نشر</button>
-      <button onclick="status('${i.id}','draft')">إخفاء</button>
-      <a href="detail.html?id=${i.id}">تفاصيل</a>
+      <button onclick='editItem(${JSON.stringify(i.id)},${JSON.stringify(i.title)},${JSON.stringify(i.price)},${JSON.stringify(i.location)},${JSON.stringify(i.description)})'>تعديل</button>
+      <button onclick='del(${JSON.stringify(i.id)})'>حذف</button>
+      <button onclick='status(${JSON.stringify(i.id)},"published")'>نشر</button>
+      <button onclick='status(${JSON.stringify(i.id)},"draft")'>إخفاء</button>
+      <a href="detail.html?id=${encodeURIComponent(i.id)}">تفاصيل</a>
     </div>`;
   });
 
-  list.innerHTML=html;
+  $("list").innerHTML = html;
 }
 
-function editItem(i,t,p,l,d){
-  id.value=i;
-  title.value=t;
-  price.value=p;
-  location.value=l;
-  description.value=d;
+function editItem(i, t, p, l, d) {
+  $("id").value = i;
+  $("title").value = t;
+  $("price").value = p;
+  $("location").value = l;
+  $("description").value = d;
 }
 
-function del(i){
-  fetch(API,{method:"POST",body:JSON.stringify({action:"delete",id:i})})
-  .then(load);
+function del(i) {
+  fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ action: "delete", id: i })
+  }).then(load);
 }
 
-function status(i,s){
-  fetch(API,{method:"POST",body:JSON.stringify({action:"status",id:i,status:s})})
-  .then(load);
+function status(i, s) {
+  fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ action: "status", id: i, status: s })
+  }).then(load);
 }
 
 load();
 </script>
-</script>
+
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
+
 </body>
-  </html>
+</html>
