@@ -1,51 +1,37 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>عقارات مأرب</title>
-    <style>
-        body{direction:rtl;font-family:Arial;margin:0;padding:10px;background:#f5f5f5}
-        .card{background:#fff;border:1px solid #ddd;margin:10px;padding:10px;border-radius:8px}
-        img{width:100%;max-height:200px;object-fit:cover;border-radius:6px}
-        input{width:95%;padding:8px;margin:10px 0}
-        button{padding:6px 10px;margin:5px;cursor:pointer}
-        .price{color:green;font-weight:bold}
-    </style>
+<meta charset="UTF-8">
+<title>عقارات مأرب</title>
+<style>
+  body{direction:rtl; font-family:Arial; padding:10px; background:#f4f4f4;}
+  .card{background:#white; padding:15px; margin:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+  img{width:100%; max-height:200px; object-fit:cover; border-radius:5px;}
+</style>
 </head>
 <body>
-    <h2>🏘️ العقارات المتاحة</h2>
-    <input id="search" placeholder="ابحث عن عقار..." oninput="load()">
-    <div id="list">جاري التحميل...</div>
+<h2>العقارات المتاحة</h2>
+<div id="list">جاري التحميل...</div>
 
-    <script>
-        const API = "https://script.google.com/macros/s/AKfycbyez5z47f6LqBiK6-zpGDvjwLuO80ZSYkJaiSCFqQmOtOoLFjhbmOdFIy7T5ABg5YC0/exec";
+<script>
+const API = "https://script.google.com/macros/s/AKfycbzKvzVkABwJsAKK_m9A-cFCRuBzhhLKP4lQQjwFRa1PMz8P9C-YzFJx_jDrp1M-jt4/exec";
 
-        async function load(){
-            try {
-                const res = await fetch(API + "?action=public");
-                const allData = await res.json();
-                const q = document.getElementById("search").value.toLowerCase();
-                const filtered = allData.filter(i => (i.title || "").toLowerCase().includes(q) || (i.location || "").toLowerCase().includes(q));
-
-                let html = "";
-                filtered.forEach(i => {
-                    const img = i.images ? i.images.split("|")[0] : "";
-                    html += `
-                    <div class="card">
-                        ${img ? `<img src="${img}">` : ""}
-                        <h3>${i.title}</h3>
-                        <div class="price">${i.price} ريال</div>
-                        <div>📍 ${i.location}</div>
-                        <p>${i.description || ""}</p>
-                        <button onclick="location.href='detail.html?id=${i.id}'">عرض التفاصيل</button>
-                    </div>`;
-                });
-                document.getElementById("list").innerHTML = html || "لا توجد عقارات منشورة حالياً.";
-            } catch (e) {
-                document.getElementById("list").innerHTML = "خطأ في تحميل البيانات.";
-            }
-        }
-        load();
-    </script>
+async function load() {
+  const res = await fetch(API + "?action=public");
+  const data = await res.json();
+  let html = "";
+  data.forEach(i => {
+    const mainImg = i.images ? i.images.split("|")[0] : "";
+    html += `<div class="card">
+      ${mainImg ? `<img src="${mainImg}">` : ""}
+      <h3>${i.title}</h3>
+      <p>📍 ${i.location} | 💰 ${i.price} ريال</p>
+      <a href="detail.html?id=${i.id}">عرض التفاصيل</a>
+    </div>`;
+  });
+  document.getElementById("list").innerHTML = html || "لا توجد عقارات منشورة.";
+}
+load();
+</script>
 </body>
 </html>
