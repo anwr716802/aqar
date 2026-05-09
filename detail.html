@@ -2,11 +2,12 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تفاصيل العقار</title>
 <style>
 body{direction:rtl;font-family:Arial}
-img{width:200px}
-video{width:300px}
+img{width:200px;display:block;margin:8px 0}
+video{width:300px;max-width:100%;display:block;margin:8px 0}
 </style>
 </head>
 <body>
@@ -14,31 +15,37 @@ video{width:300px}
 <div id="box"></div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbyYoK3gl1Vgoekc_8PD-4jwvI0ng1Pi740uXggMAxU98m59mZQBYpmIqX_eyclq-tOpMg/exec";
-let id=new URLSearchParams(location.search).get("id");
+const API = "https://script.google.com/macros/s/AKfycbxZQpfd77yuhon_V1M3wPvq_8ujv0cdkwXlLq1ZSWpKtOzjlAx9fJJsdyVbeYdPD7Fk8Q/exec";
+const box = document.getElementById("box");
+const id = new URLSearchParams(location.search).get("id");
 
-fetch(API+"?action=one&id="+id)
-.then(r=>r.json())
-.then(i=>{
-  box.innerHTML=`
-  <h2>${i.title}</h2>
-  <p>${i.description}</p>
-  <b>${i.price}</b><br>
-  <p>${i.location}</p>
+fetch(API + "?action=one&id=" + encodeURIComponent(id))
+  .then(r => r.json())
+  .then(i => {
+    box.innerHTML = `
+      <h2>${i.title || ""}</h2>
+      <p>${i.description || ""}</p>
+      <b>${i.price || ""}</b><br>
+      <p>${i.location || ""}</p>
 
-  ${i.images?i.images.split("|").map(x=>`<img src="${x}">`).join(""):""}
+      ${(i.images ? i.images.split("|").map(x => `<img src="${x}">`).join("") : "")}
 
-  ${i.video?`<video controls src="${i.video}"></video>`:""}
+      ${(i.video ? `<video controls src="${i.video}"></video>` : "")}
 
-  <br><br>
-  <a href="https://wa.me/967XXXXXXXXX?text=أريد%20استفسار%20عن%20${i.title}">
-    تواصل واتساب
-  </a>
-  `;
-});
+      <br><br>
+      <a href="https://wa.me/967XXXXXXXXX?text=${encodeURIComponent("أريد استفسار عن " + (i.title || ""))}">
+        تواصل واتساب
+      </a>
+    `;
+  })
+  .catch(err => {
+    box.innerHTML = "<p>تعذر تحميل التفاصيل</p>";
+    console.error(err);
+  });
 </script>
-</script>
+
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
+
 </body>
-  </html>
+</html>
