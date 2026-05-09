@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تفاصيل العقار</title>
+<style>
+body{direction:rtl;font-family:Arial}
+img{width:200px}
+video{width:300px}
+</style>
+</head>
+<body>
+
+<div id="box"></div>
+
+<script>
+const API="ضع_API_URL";
+let id=new URLSearchParams(location.search).get("id");
+
+fetch(API+"?action=one&id="+id)
+.then(r=>r.json())
+.then(i=>{
+  box.innerHTML=`
+  <h2>${i.title}</h2>
+  <p>${i.description}</p>
+  <b>${i.price}</b><br>
+  <p>${i.location}</p>
+
+  ${i.images?i.images.split("|").map(x=>`<img src="${x}">`).join(""):""}
+
+  ${i.video?`<video controls src="${i.video}"></video>`:""}
+
+  <br><br>
+  <a href="https://wa.me/967XXXXXXXXX?text=أريد%20استفسار%20عن%20${i.title}">
+    تواصل واتساب
+  </a>
+  `;
+});
+</script>
+
+</body>
+  </html>
