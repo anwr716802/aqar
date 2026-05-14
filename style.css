@@ -1,0 +1,131 @@
+/* تنسيقات عامة */
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #27ae60;
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+    --white: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    direction: rtl;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+/* بطاقات العقارات */
+.card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 15px;
+}
+
+.card h3 {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+/* الأزرار */
+button, .btn-link {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    transition: opacity 0.3s;
+}
+
+button:hover { opacity: 0.9; }
+
+button:disabled { background-color: #ccc; }
+
+/* النموذج (Form) */
+#form {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+input, textarea {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px; /* لمنع الزووم التلقائي في الآيفون */
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+/* تفاصيل العقار */
+.detail-box img {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+video {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.whatsapp-btn {
+    background-color: #25d366;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+/* متجاوب مع الشاشات الصغيرة */
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    .card img { height: 180px; }
+}
