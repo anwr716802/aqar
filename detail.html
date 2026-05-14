@@ -3,104 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة العقارات</title>
+    <title>تفاصيل العقار</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <h2>لوحة تحكم العقارات</h2>
-    
-    <div id="form">
-        <input id="id" type="hidden">
-        <input id="title" placeholder="عنوان العقار (مثلاً: شقة فاخرة للبيع)">
-        <input id="price" placeholder="السعر">
-        <input id="location" placeholder="الموقع">
-        <textarea id="description" rows="4" placeholder="الوصف التفصيلي"></textarea>
-        
-        <label>صور العقار:</label>
-        <input type="file" id="images" multiple accept="image/*">
-        
-        <label>فيديو (اختياري):</label>
-        <input type="file" id="video" accept="video/*">
-        
-        <button onclick="save()" id="saveBtn">حفظ العقار ونشره</button>
-    </div>
-
-    <hr style="margin: 20px 0; opacity: 0.2;">
-    <h3>قائمة عقاراتي الحالية:</h3>
-    <div id="list">جاري تحميل بياناتك...</div>
+<div class="container detail-box">
+    <div id="box">جاري تحميل التفاصيل...</div>
+    <br>
+    <a href="index.html" style="color:var(--primary-color)">← العودة للرئيسية</a>
 </div>
 
 <script>
-// الإبقاء على نفس الكود البرمجي الخاص بك
-const API = "https://script.google.com/macros/s/AKfycbzKvzVkABwJsAKK_m9A-cFCRuBzhhLKP4lQQjwFRa1PMz8P9C-YzFJx_jDrp1M-jt4/exec";
-const CLOUD = "dxjzks7xl";
-const PRESET = "myupload";
+const API = "https://script.google.com/macros/s/AKfycbwYo5YE8BVmlNGB0UWjZk27DbTABFw7RDYrQKB3Jb4QAIhwehucyvfSA7fqzgpsEIW-Ng/exec";
+const box = document.getElementById("box");
+const id = new URLSearchParams(location.search).get("id");
 
-async function uploadFile(file, type = "image") {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${type}/upload`, {method: "POST", body: fd});
-    const d = await res.json();
-    return d.secure_url;
-}
+fetch(API + "?action=one&id=" + encodeURIComponent(id))
+  .then(r => r.json())
+  .then(i => {
+    box.innerHTML = `
+      <h2>${i.title || "بدون عنوان"}</h2>
+      <div class="card-content">
+          <p style="white-space: pre-wrap; margin-bottom:15px;">${i.description || ""}</p>
+          <p><b>السعر:</b> ${i.price || ""} ريال</p>
+          <p><b>الموقع:</b> ${i.location || ""}</p>
+      </div>
 
-async function save() {
-    const btn = document.getElementById("saveBtn");
-    btn.innerText = "جاري الحفظ والرفع...";
-    btn.disabled = true;
+      <div class="gallery">
+        ${(i.images ? i.images.split("|").map(x => `<img src="${x}" class="property-img">`).join("") : "")}
+      </div>
 
-    const imgFiles = document.getElementById("images").files;
-    let imgUrls = [];
-    for (let f of imgFiles) imgUrls.push(await uploadFile(f, "image"));
+      ${(i.video ? `<video controls src="${i.video}"></video>` : "")}
 
-    const vidFile = document.getElementById("video").files[0];
-    let vidUrl = vidFile ? await uploadFile(vidFile, "video") : "";
-
-    const data = {
-        action: document.getElementById("id").value ? "edit" : "add",
-        id: document.getElementById("id").value,
-        title: document.getElementById("title").value,
-        price: document.getElementById("price").value,
-        location: document.getElementById("location").value,
-        description: document.getElementById("description").value,
-        images: imgUrls.join("|"),
-        video: vidUrl
-    };
-
-    await fetch(API, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(data)
-    });
-    
-    alert("تمت العملية بنجاح!");
-    location.reload();
-}
-
-async function load() {
-    const res = await fetch(API + "?action=my");
-    const data = await res.json();
-    let html = "";
-    data.forEach(i => {
-        html += `<div class="card" style="padding:15px">
-            <b>${i.title}</b> - <small>${i.status}</small><br><br>
-            <button style="background:#2c3e50" onclick="updateStatus('${i.id}', 'published')">نشر</button>
-            <button style="background:#e74c3c" onclick="updateStatus('${i.id}', 'draft')">إخفاء</button>
-        </div>`;
-    });
-    document.getElementById("list").innerHTML = html || "لا يوجد بيانات.";
-}
-
-async function updateStatus(id, s) {
-    await fetch(API, {method: "POST", body: JSON.stringify({action: "status", id: id, status: s})});
-    load();
-}
-
-load();
+      <a class="btn-link whatsapp-btn" href="https://wa.me/967XXXXXXXXX?text=${encodeURIComponent("أريد استفسار عن " + (i.title || ""))}">
+        تواصل عبر واتساب
+      </a>
+    `;
+  })
+  .catch(err => {
+    box.innerHTML = "<p>تعذر تحميل التفاصيل، تأكد من اتصالك بالإنترنت.</p>";
+  });
 </script>
 </body>
 </html>
