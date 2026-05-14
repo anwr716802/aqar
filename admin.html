@@ -1,104 +1,106 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>إدارة العقارات</title>
-<style>
-  body{direction:rtl; font-family:Arial; padding:20px;}
-  .card{border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px;}
-  input, textarea{width:100%; margin:5px 0; padding:8px;}
-  button{padding:10px; cursor:pointer; margin:5px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة العقارات</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>إدارة عقاراتي</h2>
-<div id="form">
-  <input id="id" type="hidden">
-  <input id="title" placeholder="عنوان العقار">
-  <input id="price" placeholder="السعر">
-  <input id="location" placeholder="الموقع">
-  <textarea id="description" placeholder="الوصف"></textarea>
-  <label>الصور:</label><input type="file" id="images" multiple>
-  <label>الفيديو:</label><input type="file" id="video">
-  <button onclick="save()" id="saveBtn">حفظ العقار</button>
+<div class="container">
+    <h2>لوحة تحكم العقارات</h2>
+    
+    <div id="form">
+        <input id="id" type="hidden">
+        <input id="title" placeholder="عنوان العقار (مثلاً: شقة فاخرة للبيع)">
+        <input id="price" placeholder="السعر">
+        <input id="location" placeholder="الموقع">
+        <textarea id="description" rows="4" placeholder="الوصف التفصيلي"></textarea>
+        
+        <label>صور العقار:</label>
+        <input type="file" id="images" multiple accept="image/*">
+        
+        <label>فيديو (اختياري):</label>
+        <input type="file" id="video" accept="video/*">
+        
+        <button onclick="save()" id="saveBtn">حفظ العقار ونشره</button>
+    </div>
+
+    <hr style="margin: 20px 0; opacity: 0.2;">
+    <h3>قائمة عقاراتي الحالية:</h3>
+    <div id="list">جاري تحميل بياناتك...</div>
 </div>
 
-<hr>
-<div id="list">جاري تحميل بياناتك...</div>
-
 <script>
+// الإبقاء على نفس الكود البرمجي الخاص بك
 const API = "https://script.google.com/macros/s/AKfycbzKvzVkABwJsAKK_m9A-cFCRuBzhhLKP4lQQjwFRa1PMz8P9C-YzFJx_jDrp1M-jt4/exec";
 const CLOUD = "dxjzks7xl";
 const PRESET = "myupload";
 
 async function uploadFile(file, type = "image") {
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("upload_preset", PRESET);
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${type}/upload`, {method: "POST", body: fd});
-  const d = await res.json();
-  return d.secure_url;
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${type}/upload`, {method: "POST", body: fd});
+    const d = await res.json();
+    return d.secure_url;
 }
 
 async function save() {
-  const btn = document.getElementById("saveBtn");
-  btn.innerText = "جاري الحفظ والرفع...";
-  btn.disabled = true;
+    const btn = document.getElementById("saveBtn");
+    btn.innerText = "جاري الحفظ والرفع...";
+    btn.disabled = true;
 
-  const imgFiles = document.getElementById("images").files;
-  let imgUrls = [];
-  for (let f of imgFiles) imgUrls.push(await uploadFile(f, "image"));
+    const imgFiles = document.getElementById("images").files;
+    let imgUrls = [];
+    for (let f of imgFiles) imgUrls.push(await uploadFile(f, "image"));
 
-  const vidFile = document.getElementById("video").files[0];
-  let vidUrl = vidFile ? await uploadFile(vidFile, "video") : "";
+    const vidFile = document.getElementById("video").files[0];
+    let vidUrl = vidFile ? await uploadFile(vidFile, "video") : "";
 
-  const data = {
-    action: document.getElementById("id").value ? "edit" : "add",
-    id: document.getElementById("id").value,
-    title: document.getElementById("title").value,
-    price: document.getElementById("price").value,
-    location: document.getElementById("location").value,
-    description: document.getElementById("description").value,
-    images: imgUrls.join("|"),
-    video: vidUrl
-  };
+    const data = {
+        action: document.getElementById("id").value ? "edit" : "add",
+        id: document.getElementById("id").value,
+        title: document.getElementById("title").value,
+        price: document.getElementById("price").value,
+        location: document.getElementById("location").value,
+        description: document.getElementById("description").value,
+        images: imgUrls.join("|"),
+        video: vidUrl
+    };
 
-  await fetch(API, {
-  method: "POST",
-  mode: "no-cors", // 💡 هذا السطر يخبر المتصفح بتجاهل قيود الأمان وإرسال الطلب
-  headers: {
-    "Content-Type": "text/plain", // نستخدم نصاً عادياً لتجاوز الفحص الأمني
-  },
-  body: JSON.stringify(data)
-});
-
+    await fetch(API, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(data)
+    });
+    
+    alert("تمت العملية بنجاح!");
+    location.reload();
 }
 
 async function load() {
-  const res = await fetch(API + "?action=my");
-  const data = await res.json();
-  let html = "";
-  data.forEach(i => {
-    html += `<div class="card">
-      <b>${i.title}</b> - ${i.status}
-      <button onclick="updateStatus('${i.id}', 'published')">نشر</button>
-      <button onclick="updateStatus('${i.id}', 'draft')">إخفاء</button>
-    </div>`;
-  });
-  document.getElementById("list").innerHTML = html || "لا يوجد بيانات.";
+    const res = await fetch(API + "?action=my");
+    const data = await res.json();
+    let html = "";
+    data.forEach(i => {
+        html += `<div class="card" style="padding:15px">
+            <b>${i.title}</b> - <small>${i.status}</small><br><br>
+            <button style="background:#2c3e50" onclick="updateStatus('${i.id}', 'published')">نشر</button>
+            <button style="background:#e74c3c" onclick="updateStatus('${i.id}', 'draft')">إخفاء</button>
+        </div>`;
+    });
+    document.getElementById("list").innerHTML = html || "لا يوجد بيانات.";
 }
 
 async function updateStatus(id, s) {
-  await fetch(API, {method: "POST", body: JSON.stringify({action: "status", id: id, status: s})});
-  load();
+    await fetch(API, {method: "POST", body: JSON.stringify({action: "status", id: id, status: s})});
+    load();
 }
 
 load();
 </script>
-
-  
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 </body>
 </html>
